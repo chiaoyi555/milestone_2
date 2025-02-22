@@ -55,7 +55,13 @@ public class Main {
         System.out.println("andi: " + determineInstructionType("andi")); // i
         System.out.println("syscall: " + determineInstructionType("syscall")); // syscall
         System.out.println("xyz: " + determineInstructionType("xyz")); // unknown type
-
+        
+        // tests for removeComment
+        System.out.println("tests for removeComment");
+        System.out.println(removeComment("add $t0, $t1, $t2 # This is a comment")); // add $t0, $t1, $t2
+        System.out.println(removeComment("lw $a0, 0($sp) # load value")); // lw $a0, 0($sp)
+        System.out.println(removeComment("# Only a comment")); // empty
+    
     }
 
     // method for determine whether it is r-format, i-format or j-format
@@ -163,4 +169,9 @@ public class Main {
         return inst;
     }
 
+    // remove comment
+    public static String removeComment(String input) {
+        return input.split("#")[0].trim(); 
+    }
 }
+
