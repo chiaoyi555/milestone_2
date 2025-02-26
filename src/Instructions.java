@@ -261,6 +261,9 @@ public class Instructions {
             String[] split = target.split("x");
             intermediate = Integer.parseInt(split[1], 16);
         }
+        else if(regArray[1].equals("")){
+            intermediate = 0;
+        }
         else{
             intermediate = Integer.parseInt(regArray[1]); // parse string (int)
         }
