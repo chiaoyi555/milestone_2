@@ -3,7 +3,7 @@ public class Instructions {
     // method for determine whether it is r-format, i-format or j-format
     public static String determineInstructionType(String instruction) {
         String[] R_Format = { "add", "and", "or", "slt", "sub" };
-        String[] I_Format = { "addi", "andi", "beq", "bne", "lui", "lu", "ori", "su" };
+        String[] I_Format = { "addiu", "andi", "beq", "bne", "lui", "lw", "ori", "sw" };
         String[] J_Format = { "j" };
 
         if (instruction == null) {
@@ -84,58 +84,44 @@ public class Instructions {
 
     // method for run I format encoding
     public static String iFormatEncoding(String instruction, String [] regArray) {
-        int inst = 0, opcode = 0, intermediate = 0;
-        Integer rs, rt;
         // instruction format: op<<26, rs<<21, rt<<16, int ends at 15
+        int inst = 0;
+        int opcode = 0;
         switch(instruction){
-            case "addiu":
+            case "addiu": // addiu array: [rt], [rs], [int]
                 opcode = 0b001001;
+                inst = RTRSIntermediate(opcode, regArray); // rt rs int method
                 break;
-            case "andi":
-                // array order: [rt], [rs], [int]
+            case "andi": // andi array: [rt], [rs], [int]
                 opcode = 0b001100;
-                if(regArray[2].contains("-")) {
-                    intermediate = parseNegative(regArray[2]); // convert to 2's complement
-                }
-                else if(regArray[2].contains("0x")){
-                    intermediate = Integer.parseInt(regArray[2], 16); // parse string (hexi)
-                }
-                else{
-                    intermediate = Integer.parseInt(regArray[2]); // parse string (int)
-                }
-                intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
-                rs = Register.getRegisterNumber(regArray[1]); // rs register number
-                rt = Register.getRegisterNumber(regArray[0]); // rt register number
-                if (rs == null || rt == null) {
-                    throw new IllegalArgumentException("Invalid register name");
-                }
-                Integer.toBinaryString(rs); // covert rs to number
-                Integer.toBinaryString(rt); // covert rt to number
-                inst |= (opcode << 26);
-                inst |= (rs << 21);
-                inst |= (rt << 16);
-                inst |= intermediate;
-                return String.format("%08x", inst); // return hexidecimal string of instruction
-            case "beq":
-                opcode = 0b0;
+                inst = RTRSIntermediate(opcode, regArray); // rt rs int method
                 break;
-            case "bne":
-                opcode = 0b0;
+            case "beq": // beq array: [rs], [rt], [int]
+                opcode = 0b000100;
+                inst = RSRTIntermediate(opcode, regArray); // rs rt int method
+                break;
+            case "bne": // bne array: [rs], [rt], [int]
+                opcode = 0b000101;
+                inst = RSRTIntermediate(opcode, regArray); //rs rt int method
                 break;
             case "lui":
-                opcode = 0b0;
+                opcode = 0b001111;
+                inst = RTIntermediate(opcode, regArray); // rt int method
                 break;
             case "lw":
-                opcode = 0b0;
+                opcode = 0b100011;
+                inst = RTOffsetBase(opcode, regArray); // rt offset base method
                 break;
             case "ori":
-                opcode = 0b0;
+                opcode = 0b001101;
+                inst = RTRSIntermediate(opcode, regArray); // rt rs int method
                 break;
             case "sw":
-                opcode = 0b0;
+                opcode = 0b101011;
+                inst = RTOffsetBase(opcode, regArray); // rt offset base method
                 break;
         }
-        return null;
+        return String.format("%08x", inst); // return hexidecimal string of instruction;
     }
 
     // method for run J format encoding
@@ -171,8 +157,125 @@ public class Instructions {
     }
     public static int trimIntermediate(int intermediate){
         int shift = (int)(Math.pow(2,16)-1);
-        int trim = intermediate & shift;
-        System.out.println(trim);
+        int trim = (int)(intermediate & shift);
         return trim;
+    }
+    public static int RTRSIntermediate(int opcode, String []regArray){
+        int inst = 0;
+        int intermediate = 0;
+        Integer rs, rt;
+        if(regArray[2].contains("-")) {
+            intermediate = parseNegative(regArray[2]); // convert to 2's complement
+        }
+        else if(regArray[2].contains("0x")){
+            String target = regArray[2].toString();
+            String[] split = target.split("x");
+            intermediate = Integer.parseInt(split[1], 16);
+        }
+        else{
+            intermediate = Integer.parseInt(regArray[2]); // parse string (int)
+        }
+
+        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        rs = Register.getRegisterNumber(regArray[1]); // rs register number
+        rt = Register.getRegisterNumber(regArray[0]); // rt register number
+        if (rs == null || rt == null) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
+
+        Integer.toBinaryString(rs); // covert rs to number
+        Integer.toBinaryString(rt); // covert rt to number
+        inst |= (opcode << 26);
+        inst |= (rs << 21);
+        inst |= (rt << 16);
+        inst |= intermediate;
+        return inst;
+    }
+    public static int RSRTIntermediate(int opcode, String [] regArray){
+        int inst = 0;
+        int intermediate = 0;
+        Integer rs, rt;
+        if(regArray[2].contains("-")) {
+            intermediate = parseNegative(regArray[2]); // convert to 2's complement
+        }
+        else if(regArray[2].contains("0x")){
+            String target = regArray[2].toString();
+            String[] split = target.split("x");
+            intermediate = Integer.parseInt(split[1], 16);
+        }
+        else{
+            intermediate = Integer.parseInt(regArray[2]); // parse string (int)
+        }
+
+        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        rs = Register.getRegisterNumber(regArray[0]); // rs register number
+        rt = Register.getRegisterNumber(regArray[1]); // rt register number
+        if (rs == null || rt == null) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
+
+        Integer.toBinaryString(rs); // covert rs to number
+        Integer.toBinaryString(rt); // covert rt to number
+        inst |= (opcode << 26);
+        inst |= (rs << 21);
+        inst |= (rt << 16);
+        inst |= intermediate;
+        return inst;
+    }
+    public static int RTIntermediate(int opcode, String [] regArray){
+        int inst = 0;
+        int intermediate = 0;
+        Integer rt;
+        if(regArray[1].contains("-")) {
+            intermediate = parseNegative(regArray[1]); // convert to 2's complement
+        }
+        else if(regArray[1].contains("0x")){
+            String target = regArray[1].toString();
+            String[] split = target.split("x");
+            intermediate = Integer.parseInt(split[1], 16);
+        }
+        else{
+            intermediate = Integer.parseInt(regArray[1]); // parse string (int)
+        }
+
+        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        rt = Register.getRegisterNumber(regArray[0]); // rt register number
+        if (rt == null) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
+        Integer.toBinaryString(rt); // covert rt to number
+        inst |= (opcode << 26);
+        inst |= (rt << 16);
+        inst |= intermediate;
+        return inst;
+    }
+    public static int RTOffsetBase(int opcode, String [] regArray){
+        int inst = 0;
+        int intermediate = 0;
+        Integer rt, base;
+        if(regArray[1].contains("-")) {
+            intermediate = parseNegative(regArray[1]); // convert to 2's complement
+        }
+        else if(regArray[1].contains("0x")){
+            String target = regArray[1].toString();
+            String[] split = target.split("x");
+            intermediate = Integer.parseInt(split[1], 16);
+        }
+        else{
+            intermediate = Integer.parseInt(regArray[1]); // parse string (int)
+        }
+
+        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        rt = Register.getRegisterNumber(regArray[0]); // rt register number
+        base = Register.getRegisterNumber(regArray[2]);
+        if (rt == null) {
+            throw new IllegalArgumentException("Invalid register name");
+        }
+        Integer.toBinaryString(rt); // covert rt to number
+        inst |= (opcode << 26);
+        inst |= (base<<21);
+        inst |= (rt << 16);
+        inst |= intermediate;
+        return inst;
     }
 }

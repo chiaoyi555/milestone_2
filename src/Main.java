@@ -2,8 +2,8 @@ public class Main {
 
     public static void main(String[] args) {
         // Scanner s = new Scanner(System.in); // scanner
-        String nextTest = " andi  $t0, $s5,  151 "; // s.nextLine(); // input scanner
-        String line = " andi $s5, $t7, -79";
+        String nextTest = ""; // s.nextLine(); // input scanner
+        String line = " sw $s3, 26($k1) ";
         line = Instructions.removeComment(line); //removes comment
         System.out.println(line);
         line = line.trim(); // remove boarder spaces
@@ -39,7 +39,7 @@ public class Main {
 
             } else if (Instructions.determineInstructionType(instruction).equals("J_Format")) {
                 // run J format encoding
-                inst = Instructions.jFormatEncoding(regArray[1]);
+                inst = Instructions.jFormatEncoding(regArray[0]);
 
             }
 
