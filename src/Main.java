@@ -3,10 +3,11 @@ public class Main {
     public static void main(String[] args) {
         // Scanner s = new Scanner(System.in); // scanner
         String nextTest = " andi  $t0, $s5,  151 "; // s.nextLine(); // input scanner
-        String line = " syscall  ";
+        String line = " andi $s5, $t7, -79";
         line = Instructions.removeComment(line); //removes comment
         System.out.println(line);
         line = line.trim(); // remove boarder spaces
+
         if (line.contains(" ") == false) {
             Instructions.syscall();
         }

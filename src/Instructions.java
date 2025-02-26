@@ -84,25 +84,38 @@ public class Instructions {
 
     // method for run I format encoding
     public static String iFormatEncoding(String instruction, String [] regArray) {
-        int opcode = 0;
+        int inst = 0, opcode = 0, intermediate = 0;
+        Integer rs, rt;
+        // instruction format: op<<26, rs<<21, rt<<16, int ends at 15
         switch(instruction){
             case "addiu":
                 opcode = 0b001001;
                 break;
-            case "addi":
-                // instruction format: op<<26, rs<<21, rt<<16, int ends at 15
-                // array format: [rt], [rs], [int]
+            case "andi":
+                // array order: [rt], [rs], [int]
                 opcode = 0b001100;
-                int num;
                 if(regArray[2].contains("-")) {
-                    String value = regArray[2].substring(1); // removing - sign
-                    num = Integer.parseInt(value);
-                    num = ~(~num); // 2's complement of a negative number
+                    intermediate = parseNegative(regArray[2]); // convert to 2's complement
                 }
-                if(regArray[2].contains("x")){
-                    num = Integer.parseInt(regArray[2], 16);
+                else if(regArray[2].contains("0x")){
+                    intermediate = Integer.parseInt(regArray[2], 16); // parse string (hexi)
                 }
-                break;
+                else{
+                    intermediate = Integer.parseInt(regArray[2]); // parse string (int)
+                }
+                intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+                rs = Register.getRegisterNumber(regArray[1]); // rs register number
+                rt = Register.getRegisterNumber(regArray[0]); // rt register number
+                if (rs == null || rt == null) {
+                    throw new IllegalArgumentException("Invalid register name");
+                }
+                Integer.toBinaryString(rs); // covert rs to number
+                Integer.toBinaryString(rt); // covert rt to number
+                inst |= (opcode << 26);
+                inst |= (rs << 21);
+                inst |= (rt << 16);
+                inst |= intermediate;
+                return String.format("%08x", inst); // return hexidecimal string of instruction
             case "beq":
                 opcode = 0b0;
                 break;
@@ -146,5 +159,20 @@ public class Instructions {
     // remove comment
     public static String removeComment(String input) {
         return input.split("#")[0].trim();
+    }
+    // parse negative number
+    public static int parseNegative(String negativeNum){
+        int twosComplement;
+        String splitAt = "-";
+        String []num = negativeNum.split(splitAt); // removing - sign
+        System.out.println(twosComplement = -Integer.parseInt(num[1])); //adding sign after parse
+        twosComplement = ~(~twosComplement); // 2's complement of a negative number
+        return twosComplement;
+    }
+    public static int trimIntermediate(int intermediate){
+        int shift = (int)(Math.pow(2,16)-1);
+        int trim = intermediate & shift;
+        System.out.println(trim);
+        return trim;
     }
 }
