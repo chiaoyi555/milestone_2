@@ -83,7 +83,45 @@ public class Instructions {
     }
 
     // method for run I format encoding
-    public static String iFormatEncoding() {
+    public static String iFormatEncoding(String instruction, String [] regArray) {
+        int opcode = 0;
+        switch(instruction){
+            case "addiu":
+                opcode = 0b001001;
+                break;
+            case "addi":
+                // instruction format: op<<26, rs<<21, rt<<16, int ends at 15
+                // array format: [rt], [rs], [int]
+                opcode = 0b001100;
+                int num;
+                if(regArray[2].contains("-")) {
+                    String value = regArray[2].substring(1); // removing - sign
+                    num = Integer.parseInt(value);
+                    num = ~(~num); // 2's complement of a negative number
+                }
+                if(regArray[2].contains("x")){
+                    num = Integer.parseInt(regArray[2], 16);
+                }
+                break;
+            case "beq":
+                opcode = 0b0;
+                break;
+            case "bne":
+                opcode = 0b0;
+                break;
+            case "lui":
+                opcode = 0b0;
+                break;
+            case "lw":
+                opcode = 0b0;
+                break;
+            case "ori":
+                opcode = 0b0;
+                break;
+            case "sw":
+                opcode = 0b0;
+                break;
+        }
         return null;
     }
 
