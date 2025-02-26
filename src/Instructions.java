@@ -151,7 +151,7 @@ public class Instructions {
         int twosComplement;
         String splitAt = "-";
         String []num = negativeNum.split(splitAt); // removing - sign
-        System.out.println(twosComplement = -Integer.parseInt(num[1])); //adding sign after parse
+        twosComplement = -Integer.parseInt(num[1]); //adding sign after parse
         twosComplement = ~(~twosComplement); // 2's complement of a negative number
         return twosComplement;
     }
