@@ -6,8 +6,8 @@ public class Main {
         String line = s.nextLine();
         line = Instructions.removeComment(line); //removes comment
         line = line.trim(); // remove boarder spaces
-        if (line.contains(" ") == false) {
-            Instructions.syscall();
+        if (!line.contains(" ")) {
+            System.out.println(Instructions.syscall());
         }
         else {
             int splitInstruction = line.indexOf(" ");
@@ -37,7 +37,8 @@ public class Main {
                 inst = Instructions.jFormatEncoding(regArray[0]);
 
             }
-            System.out.print(inst);
+            System.out.println(inst);
+
             /*
             System.out.println(inst);
             // tests for Register.java
