@@ -1,20 +1,18 @@
+import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        // Scanner s = new Scanner(System.in); // scanner
-        String nextTest = ""; // s.nextLine(); // input scanner
-        String line = " sw $s3, 26($k1) ";
+        Scanner s = new Scanner(System.in); // scanner
+        String line = s.nextLine();
         line = Instructions.removeComment(line); //removes comment
-        System.out.println(line);
         line = line.trim(); // remove boarder spaces
-
         if (line.contains(" ") == false) {
             Instructions.syscall();
         }
         else {
             int splitInstruction = line.indexOf(" ");
             String instruction = line.substring(0, splitInstruction); //instruction substring
-            System.out.println("contains_space?" + instruction + "?"); //instruction contains no additional space
+            //System.out.println("contains_space?" + instruction + "?"); //instruction contains no additional space
             String registers = line.substring(splitInstruction); // registers substring
             registers = registers.replace(")", "");
             registers = registers.replace("(", ",");
@@ -23,9 +21,6 @@ public class Main {
             regArray = registers.split(splitAtComma);
             for (int i = 0; i < regArray.length; ++i) {
                 regArray[i] = regArray[i].trim();
-            }
-            for (String s : regArray) {
-                System.out.println("contains_space?" + s + "?");
             }
 
             String inst = null;
@@ -42,7 +37,8 @@ public class Main {
                 inst = Instructions.jFormatEncoding(regArray[0]);
 
             }
-
+            System.out.print(inst);
+            /*
             System.out.println(inst);
             // tests for Register.java
             System.out.println(Register.getRegisterNumber("$t0")); // 8
@@ -68,6 +64,7 @@ public class Main {
             System.out.println(Instructions.removeComment("add $t0, $t1, $t2 # This is a comment")); // add $t0, $t1, $t2
             System.out.println(Instructions.removeComment("lw $a0, 0($sp) # load value")); // lw $a0, 0($sp)
             System.out.println(Instructions.removeComment("# Only a comment")); // empty
+             */
         }
     }
 }
