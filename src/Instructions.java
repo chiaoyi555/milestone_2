@@ -157,7 +157,7 @@ public class Instructions {
     }
     public static int trimIntermediate(int intermediate){
         int shift = (int)(Math.pow(2,16)-1);
-        int trim = (int)(intermediate & shift);
+        int trim = (intermediate & shift);
         return trim;
     }
     public static int RTRSIntermediate(int opcode, String []regArray){

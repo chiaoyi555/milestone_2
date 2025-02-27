@@ -2,11 +2,11 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        Scanner s = new Scanner(System.in); // scanner
-        String line = s.nextLine();
+        String line = args[0];
+        //System.out.println(line);
         line = Instructions.removeComment(line); //removes comment
         line = line.trim(); // remove boarder spaces
-        if (!line.contains(" ")) {
+        if (Instructions.determineInstructionType(line).equals("syscall")) {
             System.out.println(Instructions.syscall());
         }
         else {
@@ -21,8 +21,8 @@ public class Main {
             regArray = registers.split(splitAtComma);
             for (int i = 0; i < regArray.length; ++i) {
                 regArray[i] = regArray[i].trim();
+                System.out.println(regArray[i]);
             }
-
             String inst = null;
             if (Instructions.determineInstructionType(instruction).equals("R_Format")) {
                 // run R format encoding
@@ -35,7 +35,6 @@ public class Main {
             } else if (Instructions.determineInstructionType(instruction).equals("J_Format")) {
                 // run J format encoding
                 inst = Instructions.jFormatEncoding(regArray[0]);
-
             }
             System.out.println(inst);
 
@@ -65,7 +64,8 @@ public class Main {
             System.out.println(Instructions.removeComment("add $t0, $t1, $t2 # This is a comment")); // add $t0, $t1, $t2
             System.out.println(Instructions.removeComment("lw $a0, 0($sp) # load value")); // lw $a0, 0($sp)
             System.out.println(Instructions.removeComment("# Only a comment")); // empty
-             */
+            */
         }
+
     }
 }
