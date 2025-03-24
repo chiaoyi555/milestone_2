@@ -32,10 +32,17 @@ public class Main {
                     textSection.add(line);
             }
 
-            // Process the .data section
+            // Process the .data section: parse data and generate encoded machine code
             DataSection data = new DataSection();
             data.parseDataSection(new ArrayList<>(dataSection));
             List<String> dataOutput = data.getEncodedData();
+
+            // Process the .text section: parse instructions and generate machine code
+            TextSection text = new TextSection();
+            text.parseTextSection(new ArrayList<>(textSection));
+            text.resolveLabels(data); // Resolve labels for jump and branch instructions like j, beq, la, etc.
+            List<String> textOutput = text.getMachineCode();
+
 
         }catch(IOException e){
             System.err.println(" Failed to read or write file: " + e.getMessage());
