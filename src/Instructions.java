@@ -1,10 +1,17 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class Instructions {
+
+    private static final int MAX_16BIT = 0xFFFF;
 
     // method for determine whether it is r-format, i-format or j-format
     public static String determineInstructionType(String instruction) {
         String[] R_Format = { "add", "and", "or", "slt", "sub" };
         String[] I_Format = { "addiu", "andi", "beq", "bne", "lui", "lw", "ori", "sw" };
         String[] J_Format = { "j" };
+        String[] pseudo_instructions = {"li", "la", "blt", "move"};
+
 
         if (instruction == null) {
             return "Unknown Type";
@@ -22,6 +29,11 @@ public class Instructions {
             if (ins.equals(instruction))
                 return "J_Format";
         }
+        for (String ins : pseudo_instructions) { // run the for loop to see whether the instruction is pseudo instructions
+            if (ins.equals(instruction))
+                return "pseudo_instructions";
+        }
+
         if (instruction.equals("syscall"))
             return "syscall"; // otherwise it would be syscall
         return "Unknown Type";
@@ -134,6 +146,33 @@ public class Instructions {
         inst = inst | (target << 0);
         inst = inst | (j << 26);
         return String.format("%08x", inst);
+    }
+
+    public static List<String> handlePseudoInstruction(String instruction, String[] regArray) {
+        List<String> instructions = new ArrayList<>();
+
+        switch(instruction){
+            case "li":
+                int value = Integer.parseInt(regArray[1]);
+                if(value > MAX_16BIT){ // lui + ori
+                    instructions.add(iFormatEncoding("lui", new String[]{regArray[0], String.valueOf(value >>> 16)}));
+                    instructions.add(iFormatEncoding("ori", new String[]{regArray[0], regArray[0], String.valueOf(value & 0xFFFF)}));
+                }else {
+                    instructions.add(iFormatEncoding("ori", new String[]{regArray[0], "$zero", regArray[1]}));
+                }
+                break;
+            case "la":
+                // deal with this in TextSection
+                break;
+            case "blt": // slt + bne
+                instructions.add(rFormatEncoding("slt", regArray[0], regArray[1], "$at")); // slt $at, $rs, $rt
+                instructions.add(iFormatEncoding("bne", new String[]{"$at", "$zero", regArray[2]})); // bne $at, $zero, label
+                break;
+            case "move": // add $d, $s, $zero
+                instructions.add(rFormatEncoding("add", regArray[0], regArray[1], "$zero"));
+                break;
+        }
+        return instructions;
     }
 
     // method for run syscall encoding

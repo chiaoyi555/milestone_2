@@ -7,9 +7,9 @@ public class DataSection {
     //first piece of data in the .data section should be at address 0x10010000
     private static final int DATA_START_ADDRESS = 0x10010000;
 
-    private List<String> labels = new ArrayList<>(); // store the label we declared
-    private List<Integer> addresses = new ArrayList<>(); // store data's address
-    private List<String> encodedData = new ArrayList<>();
+    private final List<String> labels = new ArrayList<>(); // store the label we declared
+    private final List<Integer> addresses = new ArrayList<>(); // store data's address
+    private final List<String> encodedData = new ArrayList<>();
     private int currentAddress = DATA_START_ADDRESS;
 
 

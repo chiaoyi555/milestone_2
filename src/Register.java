@@ -24,13 +24,6 @@ public enum Register{
             this.number = number;
         }
 
-        public int getnumber() {
-            return number;
-        }
-
-        public String getName() {
-            return name;
-        }
 
         // change the register into number
         public static Integer getRegisterNumber(String register){
