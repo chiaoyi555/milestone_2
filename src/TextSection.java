@@ -45,25 +45,36 @@ public class TextSection {
                 regArray[i] = regArray[i].trim();
             }
 
-            String inst = null;
             String type = Instructions.determineInstructionType(instruction);
             if (type.equals("R_Format")) {
                 // run R format encoding
-                inst = Instructions.rFormatEncoding(instruction, regArray[0], regArray[1], regArray[2]);
+                machineCode.add(Instructions.rFormatEncoding(instruction, regArray[0], regArray[1], regArray[2]));
+                currentAddress += 4;
             } else if (type.equals("I_Format")) {
                 // run I format encoding
-                inst = Instructions.iFormatEncoding(instruction, regArray);
+                machineCode.add(Instructions.iFormatEncoding(instruction, regArray));
+                currentAddress += 4;
             } else if (type.equals("J_Format")) {
                 // run J format encoding
-                inst = Instructions.jFormatEncoding(regArray[0]);
+                machineCode.add(Instructions.jFormatEncoding(regArray[0]));
+                currentAddress += 4;
+            } else if(type.equals("pseudo_instructions")){
+                //handle the Pseudo Instruction
+                if (instruction.equals("la")) { // keep la
+                    machineCode.add("la " + regArray[0] + " " + regArray[1]);
+                    currentAddress += 8;  // lui + ori, leave 8 bytes for la
+                } else {
+                    List<String> pseudoInstructions = Instructions.handlePseudoInstruction(instruction, regArray);
+                    for (String pseudoInst : pseudoInstructions) {
+                        machineCode.add(pseudoInst);
+                        currentAddress += 4;
+                    }
+                }
             } else if (instruction.equals("syscall")) {
-                inst = Instructions.syscall();
+                machineCode.add(Instructions.syscall());
+                currentAddress += 4;
             }
 
-            if (inst != null) {
-                machineCode.add(inst); // store machine code
-                currentAddress += 4; // update address
-            }
 
         }
     }
