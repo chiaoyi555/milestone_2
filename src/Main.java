@@ -46,23 +46,28 @@ public class Main {
             // TODO get directory of input file
             // create a new files with output filename.text and filename.data
             // write to files using dataOutput & textOutput
-            String nameSplit = ".";
-            String [] file = inputFile.split(nameSplit);
-            String fileName = file[0];
 
+            String nameSplit = args[0];
+            int removePeriod = nameSplit.lastIndexOf(".");
+            int removeDirectory = nameSplit.lastIndexOf("\\");
+            String fileName = nameSplit.substring(removeDirectory+1, removePeriod);
+            int lineCount = 0;
             try{
-                File textFile = new File(inputFile);
+                File textFile = new File(fileName+".text");
                 textFile.createNewFile();
                 FileWriter writeText = new FileWriter(textFile);
-                for(String t: textOutput){
-                    writeText.write(t+"/n");
+                while(lineCount<textOutput.size()) {
+                    writeText.write(textOutput.get(lineCount)+"/n");
+                    ++lineCount;
                 }
-                File dataFile = new File(inputFile);
+                File dataFile = new File(fileName+".data");
                 dataFile.createNewFile();
                 FileWriter writeData = new FileWriter(dataFile);
-                for(String d: dataOutput){
-                    writeText.write(d+"/n");
+                while(lineCount<dataOutput.size()) {
+                    writeText.write(dataOutput.get(lineCount)+"/n");
+                    ++lineCount;
                 }
+                System.out.println("Success!");
             }
             catch(IOException e){
                 System.out.println(e.getMessage());
