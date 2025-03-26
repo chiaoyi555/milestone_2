@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class TextSection {
     private final List<Integer> addresses = new ArrayList<>(); // store data's address
     private final List<String> machineCode = new ArrayList<>();
     private int currentAddress = TEXT_START_ADDRESS;
+    private DataSection data;
 
     public void parseTextSection(ArrayList<String> textLines) {
         for(String line: textLines){
@@ -61,7 +63,10 @@ public class TextSection {
             } else if(type.equals("pseudo_instructions")){
                 //handle the Pseudo Instruction
                 if (instruction.equals("la")) { // keep la
-                    machineCode.add("la " + regArray[0] + " " + regArray[1]);
+                    //machineCode.add("la " + regArray[0] + " " + regArray[1]);
+                    List<String> la = resolveLabels("la " + regArray[0] + " " + regArray[1]);
+                    machineCode.add(la.get(0)); // add lui instruction
+                    machineCode.add(la.get(1)); // add ori instruction
                     currentAddress += 8;  // lui + ori, leave 8 bytes for la
                 } else {
                     List<String> pseudoInstructions = Instructions.handlePseudoInstruction(instruction, regArray);
@@ -80,8 +85,33 @@ public class TextSection {
     }
 
     // Replace the label with the actual offset or address (beq, bne, j, la)
-    public void resolveLabels(DataSection dataSection) {
-        
+    public ArrayList<String> resolveLabels(String la) {
+        // revised Instructions should handle beq, bne, j. Just la left?
+        // la $a0, label
+        // -> lui $at, upper 16 bits label address(remove lower 16: shift right 16, then back 16)
+        // -> ori $at lower 16 bits label address (remove upper 16: shift left 16, then back 16)
+        ArrayList<String> loadAddress = new ArrayList<>();
+        List<String> labels = data.getLabels();
+        int luiOffset = 0, oriOffset = 0;
+        char split = la.charAt(' ');
+        String registers = la.substring(split).trim(); //contains: $a0 label
+        String [] regArray = registers.split(" ");//split into $a0 & label
+
+        for(String l: labels) {
+            if(regArray[1]==l){
+                luiOffset = data.getLabelAddress(l);
+                luiOffset = luiOffset>>16;//remove lower 16
+                luiOffset = luiOffset<<16;
+                regArray[1] = ""+luiOffset;
+                loadAddress.add(Instructions.iFormatEncoding("lui", regArray));
+                oriOffset = data.getLabelAddress(l);
+                oriOffset = oriOffset<<16;//remove upper 16
+                oriOffset = oriOffset>>16;
+                regArray[1] = ""+oriOffset;
+                loadAddress.add(Instructions.iFormatEncoding("ori", regArray));
+            }
+        }
+    return loadAddress;
     }
 
     public int getLabelAddress(String label) {

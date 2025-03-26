@@ -32,7 +32,9 @@ public class DataSection {
             }
         }
     }
-
+    public List<String> getLabels(){
+        return labels;
+    }
     public int getLabelAddress(String label) {
         for (int i = 0; i < labels.size(); i++) {
             if (labels.get(i).equals(label)) {

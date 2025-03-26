@@ -4,7 +4,7 @@ import java.util.List;
 public class Instructions {
 
     private static final int MAX_16BIT = 0xFFFF;
-
+    private static DataSection data;
     // method for determine whether it is r-format, i-format or j-format
     public static String determineInstructionType(String instruction) {
         String[] R_Format = { "add", "and", "or", "slt", "sub" };
@@ -137,14 +137,25 @@ public class Instructions {
     }
 
     // method for run J format encoding
+    // TODO milestone2 format: j label -> j label_address
     public static String jFormatEncoding(String instr_index) {
-        String[] split = instr_index.split("x");
-        int target = Integer.parseInt(split[1], 16);
+        List<String> dataLabels = data.getLabels();
+        String[] split = instr_index.split(" ");
+        String label = split[1];
+        int target = 0;
+        //int target = Integer.parseInt(split[1], 16);
+        for(String l: dataLabels){
+            if(label == l){
+                target = data.getLabelAddress(l);
+            }
+        }
         int j = 0b000010;
 
         int inst = 0;
-        inst = inst | (target << 0);
+        inst = inst | (target << 2);
         inst = inst | (j << 26);
+        // 0000 | 10
+        // j = 0x0800000
         return String.format("%08x", inst);
     }
 
@@ -195,11 +206,15 @@ public class Instructions {
         return twosComplement;
     }
     public static int trimIntermediate(int intermediate){
-        int shift = (int)(Math.pow(2,16)-1);
-        int trim = (intermediate & shift);
-        return trim;
+        //int shift = (int)(Math.pow(2,16)-1);
+        //int trim = (intermediate & shift);
+        intermediate = intermediate<<16; //simplifies trimming sign bit
+        intermediate = intermediate>>16;
+        return intermediate;
     }
     public static int RTRSIntermediate(int opcode, String []regArray){
+        //pseudocode: li $v0, 4 -> addiu $v0, $zero, int
+        // 24 (opcode) 0 ($zero) 2 ($v0) 0004 (int)
         int inst = 0;
         int intermediate = 0;
         Integer rs, rt;
@@ -230,23 +245,31 @@ public class Instructions {
         inst |= intermediate;
         return inst;
     }
+    // bne & beq:
+    // TODO change rs rt int -> rs rt label
     public static int RSRTIntermediate(int opcode, String [] regArray){
+        data = new DataSection();
         int inst = 0;
-        int intermediate = 0;
+        Integer intermediate = 0;
         Integer rs, rt;
-        if(regArray[2].contains("-")) {
-            intermediate = parseNegative(regArray[2]); // convert to 2's complement
+        for(String l: data.getLabels()){
+            if(regArray[2] == l){
+                intermediate = data.getLabelAddress(l);
+            }
         }
-        else if(regArray[2].contains("0x")){
-            String target = regArray[2].toString();
+        /*if(regArray[2].contains("-")) {
+            intermediate = parseNegative(regArray[2]); // convert to 2's complement
+        }*/
+        //if(regArray[2].contains("0x")){
+            String target = intermediate.toString();
             String[] split = target.split("x");
             intermediate = Integer.parseInt(split[1], 16);
-        }
-        else{
+        //}
+        /*else{
             intermediate = Integer.parseInt(regArray[2]); // parse string (int)
-        }
+        }*/
 
-        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        //intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
         rs = Register.getRegisterNumber(regArray[0]); // rs register number
         rt = Register.getRegisterNumber(regArray[1]); // rt register number
         if (rs == null || rt == null) {
