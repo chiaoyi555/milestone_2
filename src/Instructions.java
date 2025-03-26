@@ -137,18 +137,10 @@ public class Instructions {
     }
 
     // method for run J format encoding
-    // TODO milestone2 format: j label -> j label_address
     public static String jFormatEncoding(String instr_index) {
-        List<String> dataLabels = data.getLabels();
         String[] split = instr_index.split(" ");
         String label = split[1];
-        int target = 0;
-        //int target = Integer.parseInt(split[1], 16);
-        for(String l: dataLabels){
-            if(label == l){
-                target = data.getLabelAddress(l);
-            }
-        }
+        int target = Integer.parseInt(split[1], 16);
         int j = 0b000010;
 
         int inst = 0;
@@ -213,8 +205,6 @@ public class Instructions {
         return intermediate;
     }
     public static int RTRSIntermediate(int opcode, String []regArray){
-        //pseudocode: li $v0, 4 -> addiu $v0, $zero, int
-        // 24 (opcode) 0 ($zero) 2 ($v0) 0004 (int)
         int inst = 0;
         int intermediate = 0;
         Integer rs, rt;
@@ -246,30 +236,22 @@ public class Instructions {
         return inst;
     }
     // bne & beq:
-    // TODO change rs rt int -> rs rt label
     public static int RSRTIntermediate(int opcode, String [] regArray){
-        data = new DataSection();
         int inst = 0;
         Integer intermediate = 0;
         Integer rs, rt;
-        for(String l: data.getLabels()){
-            if(regArray[2] == l){
-                intermediate = data.getLabelAddress(l);
-            }
-        }
-        /*if(regArray[2].contains("-")) {
+        if(regArray[2].contains("-")) {
             intermediate = parseNegative(regArray[2]); // convert to 2's complement
-        }*/
-        //if(regArray[2].contains("0x")){
+        }
+        else if(regArray[2].contains("0x")){
             String target = intermediate.toString();
             String[] split = target.split("x");
             intermediate = Integer.parseInt(split[1], 16);
-        //}
-        /*else{
+        }
+        else{
             intermediate = Integer.parseInt(regArray[2]); // parse string (int)
-        }*/
-
-        //intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+        }
+        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
         rs = Register.getRegisterNumber(regArray[0]); // rs register number
         rt = Register.getRegisterNumber(regArray[1]); // rt register number
         if (rs == null || rt == null) {

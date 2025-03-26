@@ -27,7 +27,7 @@ public class DataSection {
 
             if (data.startsWith(".asciiz")) {
                 // store the string between "" into content (Hello)
-                String content = data.substring(data.indexOf('"') + 1, data.lastIndexOf('"'));
+                String content = data.substring(data.indexOf("\""), data.lastIndexOf("\""));
                 encodeString(content);
             }
         }

@@ -40,19 +40,38 @@ public class Main {
             // Process the .text section: parse instructions and generate machine code
             TextSection text = new TextSection();
             text.parseTextSection(new ArrayList<>(textSection));
-            //text.resolveLabels(data); // Resolve labels for jump and branch instructions like j, beq, la, etc.
+            text.resolveLabels(data); // Resolve labels for jump and branch instructions like j, beq, la, etc.
             List<String> textOutput = text.getMachineCode();
 
+            // TODO get directory of input file
+            // create a new files with output filename.text and filename.data
+            // write to files using dataOutput & textOutput
+            String nameSplit = ".";
+            String [] file = inputFile.split(nameSplit);
+            String fileName = file[0];
+
+            try{
+                File textFile = new File(inputFile);
+                textFile.createNewFile();
+                FileWriter writeText = new FileWriter(textFile);
+                for(String t: textOutput){
+                    writeText.write(t+"/n");
+                }
+                File dataFile = new File(inputFile);
+                dataFile.createNewFile();
+                FileWriter writeData = new FileWriter(dataFile);
+                for(String d: dataOutput){
+                    writeText.write(d+"/n");
+                }
+            }
+            catch(IOException e){
+                System.out.println(e.getMessage());
+            }
         }catch(IOException e){
             System.err.println(" Failed to read or write file: " + e.getMessage());
         }
 
-        // TODO get directory of input file
-        // create a new files with output filename.text and filename.data
-        // write to files using dataOutput & textOutput
-        String nameSplit = ".";
-        String [] file = inputFile.split(nameSplit);
-        String fileName = file[0];
+
 
 //        String line = args[0];
 //        //System.out.println(line);
