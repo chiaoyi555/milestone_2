@@ -16,7 +16,6 @@ public class Main {
             boolean isText = false;
 
             for (String line : lines) { //separate the file into two parts(data and text)
-                line = line.trim();
                 if (line.startsWith(".data")) {
                     isData = true;
                     isText = false;
@@ -34,47 +33,55 @@ public class Main {
 
             // Process the .data section: parse data and generate encoded machine code
             DataSection data = new DataSection();
-            data.parseDataSection(new ArrayList<>(dataSection));
+            data.parseDataSection(dataSection);
             List<String> dataOutput = data.getEncodedData();
 
             // Process the .text section: parse instructions and generate machine code
             TextSection text = new TextSection();
-            text.parseTextSection(new ArrayList<>(textSection));
+            text.parseTextSection(textSection);
             text.resolveLabels(data); // Resolve labels for jump and branch instructions like j, beq, la, etc.
             List<String> textOutput = text.getMachineCode();
 
-            // TODO get directory of input file
-            // create a new files with output filename.text and filename.data
-            // write to files using dataOutput & textOutput
 
-            String nameSplit = args[0];
-            int removePeriod = nameSplit.lastIndexOf(".");
-            int removeDirectory = nameSplit.lastIndexOf("\\");
-            String fileName = nameSplit.substring(removeDirectory+1, removePeriod);
-            int lineCount = 0;
+            // TODO get directory of input file
+            // create a new files with filename.text and filename.data
+            // write to files using dataOutput & textOutput
+            int removePeriod = inputFile.lastIndexOf(".");
+            int removeDirectory = inputFile.lastIndexOf("/");
+            String fileName = inputFile.substring(removeDirectory+1, removePeriod);
+            String fileNameASM =inputFile.substring(removeDirectory);
+            String textFileName = fileName+".text";
+            String dataFileName = fileName+".data";
             try{
-                File textFile = new File(fileName+".text");
-                textFile.createNewFile();
-                FileWriter writeText = new FileWriter(textFile);
-                while(lineCount<textOutput.size()) {
-                    writeText.write(textOutput.get(lineCount)+"/n");
-                    ++lineCount;
-                }
-                File dataFile = new File(fileName+".data");
+                File fileDirectory = new File(inputFile);
+                String parent = fileDirectory.getParent();
+
+
+                File dataFile = new File(parent, dataFileName);
                 dataFile.createNewFile();
-                FileWriter writeData = new FileWriter(dataFile);
-                while(lineCount<dataOutput.size()) {
-                    writeText.write(dataOutput.get(lineCount)+"/n");
-                    ++lineCount;
+                BufferedWriter writeData = new BufferedWriter(new FileWriter(dataFile));
+                for(String l: dataOutput){
+                    writeData.write(l);
+                    writeData.newLine();
                 }
+                writeData.close();
+                File textFile = new File(parent, textFileName);
+                textFile.createNewFile();
+                BufferedWriter writeText = new BufferedWriter(new FileWriter(textFile));
+                for(String l: textOutput){
+                    writeText.write(l);
+                    writeText.newLine();
+                }
+                writeText.close();
                 System.out.println("Success!");
             }
             catch(IOException e){
-                System.out.println(e.getMessage());
+                System.out.println(" Failed to read or write file: "+e.getMessage());
             }
-        }catch(IOException e){
-            System.err.println(" Failed to read or write file: " + e.getMessage());
+        }catch(Exception e){
+            System.err.println( e.getMessage());
         }
+
 
 
 

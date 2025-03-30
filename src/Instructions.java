@@ -167,7 +167,7 @@ public class Instructions {
             case "la":
                 // deal with this in TextSection
                 break;
-            case "blt": // slt + bne
+            case "blt": // slt $at, $rs, $rt + bne $at, $zero, label
                 instructions.add(rFormatEncoding("slt", regArray[0], regArray[1], "$at")); // slt $at, $rs, $rt
                 instructions.add(iFormatEncoding("bne", new String[]{"$at", "$zero", regArray[2]})); // bne $at, $zero, label
                 break;
@@ -235,23 +235,25 @@ public class Instructions {
         inst |= intermediate;
         return inst;
     }
-    // bne & beq:
+    // bne & beq: rs rt label
     public static int RSRTIntermediate(int opcode, String [] regArray){
         int inst = 0;
-        Integer intermediate = 0;
+        float intermediate = 0.0F; // int >> 2 rounds down, we want to round up so need float/double(cant use shift on this)
         Integer rs, rt;
         if(regArray[2].contains("-")) {
             intermediate = parseNegative(regArray[2]); // convert to 2's complement
         }
         else if(regArray[2].contains("0x")){
-            String target = intermediate.toString();
+            String target = regArray[2];
             String[] split = target.split("x");
-            intermediate = Integer.parseInt(split[1], 16);
+            intermediate = (float)Integer.parseInt(split[1], 16);
         }
         else{
-            intermediate = Integer.parseInt(regArray[2]); // parse string (int)
+            intermediate = (float)Integer.parseInt(regArray[2]); // parse string (int)
         }
-        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
+
+        intermediate /= 4; // can't >> 2 a float number
+        int offset = (int) (intermediate); // convert back to int
         rs = Register.getRegisterNumber(regArray[0]); // rs register number
         rt = Register.getRegisterNumber(regArray[1]); // rt register number
         if (rs == null || rt == null) {
@@ -263,9 +265,10 @@ public class Instructions {
         inst |= (opcode << 26);
         inst |= (rs << 21);
         inst |= (rt << 16);
-        inst |= intermediate;
+        inst |= offset;
         return inst;
     }
+    // lui
     public static int RTIntermediate(int opcode, String [] regArray){
         int inst = 0;
         int intermediate = 0;
@@ -289,7 +292,7 @@ public class Instructions {
         }
         Integer.toBinaryString(rt); // covert rt to number
         inst |= (opcode << 26);
-        inst |= (rt << 16);
+        inst |= (rt <<14);
         inst |= intermediate;
         return inst;
     }
