@@ -38,15 +38,15 @@ public class TextSection {
             if (line.contains("syscall")) {
                 machineCode.add(Instructions.syscall());
                 labels.add(line);
-                currentAddress += 4;
                 addresses.add(currentAddress);
+                currentAddress += 4;
                 continue;
             }
             if (line.contains("j ")) {
                 labels.add(line);
                 machineCode.add(line);
-                currentAddress += 4;
                 addresses.add(currentAddress);
+                currentAddress += 4;
                 continue;
             }
             int splitInstruction = line.indexOf(" ");
@@ -68,7 +68,8 @@ public class TextSection {
                 // run R format encoding
                 machineCode.add(Instructions.rFormatEncoding(instruction, regArray[0], regArray[1], regArray[2]));
                 labels.add(line);
-                addresses.add(currentAddress+=4);
+                addresses.add(currentAddress);
+                currentAddress+=4;
             } else if (type.equals("I_Format")) {
                 // run I format encoding
                 if(instruction.equals("beq")){
@@ -84,7 +85,8 @@ public class TextSection {
                     machineCode.add(Instructions.iFormatEncoding(instruction, regArray));
                     labels.add(line);
                 }
-                addresses.add(currentAddress+=4);
+                addresses.add(currentAddress);
+                currentAddress+=4;
             } else if (type.equals("pseudo_instructions")) {
                 //handle the Pseudo Instruction
                     switch(instruction){
@@ -93,24 +95,29 @@ public class TextSection {
                             if(value > MAX_16BIT){ // lui + ori
                                 machineCode.add("lilui "+regArray); // lui $at, label shift right 16
                                 labels.add("lilui "+regArray);
-                                addresses.add(currentAddress+=4);
+                                addresses.add(currentAddress);
+                                currentAddress+=4;
                                 machineCode.add("liori "+regArray); // ori $s0, $at, label shift left 16
                                 labels.add("liori "+regArray);
-                                addresses.add(currentAddress+=4);
+                                addresses.add(currentAddress);
+                                currentAddress+=4;
                             }else {
                                 // addiu $v0, $0, 4
                                 machineCode.add(Instructions.iFormatEncoding("addiu", new String[]{regArray[0], "$zero", regArray[1]}));
                                 labels.add("addiu"+ new String[]{regArray[0]+ "$zero"+ regArray[1]});
-                                addresses.add(currentAddress+=4);
+                                addresses.add(currentAddress);
+                                currentAddress+=4;
                             }
                             break;
                         case "la":
                             machineCode.add("lalui " + "$at" + "," + regArray[1]); //lui $at, upper 16
                             labels.add("lalui " + "$at" + "," + regArray[1]);
-                            addresses.add(currentAddress+=4);
+                            addresses.add(currentAddress);
+                            currentAddress+=4;
                             machineCode.add("laori " + regArray[0] + ",$at," + regArray[1]); //ori $a0, $at, lower 16
                             labels.add("laori " + regArray[0] + ",$at," + regArray[1]);
-                            addresses.add(currentAddress+=4);
+                            addresses.add(currentAddress);
+                            currentAddress+=4;
                             //ori $a0, $at, label
                             // deal with this in TextSection
                             break;
@@ -120,10 +127,12 @@ public class TextSection {
                             addresses.add(currentAddress+=4);
                             machineCode.add("bne $at, $zero, "+regArray[2]);
                             labels.add("bne $at, $zero, "+regArray[2]);
-                            addresses.add(currentAddress+=4);
+                            addresses.add(currentAddress);
+                            currentAddress+=4;
                             break;
                         case "move": // add $d, $s, $zero
                             machineCode.add(Instructions.rFormatEncoding("add", regArray[0], regArray[1], "$zero"));
+                            addresses.add(currentAddress);
                             currentAddress+=4;
                             break;
                     }
@@ -153,7 +162,8 @@ public class TextSection {
                     String[] array = reg.split(",");
                     String label = array[2];
                     int labelAddress = this.getLabelAddress(label);
-                    int pcPlus4 = this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i)))); // gets the index of the instruction
+                    int pcPlus4 = this.addresses.get(this.getInstructionIndex(machineCode.get(i))+1);
+                            //this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i)))); // gets the index of the instruction
                     int offset = labelAddress-pcPlus4;
                     array[2] = ""+offset;
                     for(int index=0; i<array.length; ++i){
@@ -170,7 +180,8 @@ public class TextSection {
                     String label = array[2];
                     int labelAddress = this.getLabelAddress(label);
                     // get address of the instruction
-                    int pcPlus4 = this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i))));
+                    int pcPlus4 = this.addresses.get(this.getInstructionIndex(machineCode.get(i))+1);
+                            //this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i))));
                     int offset = labelAddress-pcPlus4;
                     beq = "beq ";
                     array[2] = ""+offset;

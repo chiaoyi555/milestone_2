@@ -18,6 +18,7 @@ public class DataSection {
     public void parseDataSection(List<String> dataLines) {
         List<String> temp = new ArrayList<>();
         String s = "";
+        String countAddress = "";
         for(String line: dataLines){
 
             if (line.isEmpty() || line.startsWith("#")) continue; // skip empty line or comment
@@ -33,9 +34,10 @@ public class DataSection {
 
                 String content = data.substring(data.indexOf("\"")+1, data.lastIndexOf("\""));
                 content += "\0";
-                s+=content;
-                currentAddress+=s.length();
-                s = "";
+                countAddress=content;
+                currentAddress+=countAddress.length();
+                s += countAddress;
+                countAddress = "";
             }
         }
         while(s.length()%4!=0){

@@ -46,15 +46,13 @@ public class Main {
             // create a new files with filename.text and filename.data
             // write to files using dataOutput & textOutput
             int removePeriod = inputFile.lastIndexOf(".");
-            int removeDirectory = inputFile.lastIndexOf("/");
-            String fileName = inputFile.substring(removeDirectory+1, removePeriod);
-            String fileNameASM =inputFile.substring(removeDirectory);
-            String textFileName = fileName+".text";
-            String dataFileName = fileName+".data";
             try{
                 File fileDirectory = new File(inputFile);
                 String parent = fileDirectory.getParent();
-
+                String fileName = inputFile.substring(0, removePeriod);
+                fileName = fileName.replace(parent, "");
+                String textFileName = fileName+".text";
+                String dataFileName = fileName+".data";
 
                 File dataFile = new File(parent, dataFileName);
                 dataFile.createNewFile();
