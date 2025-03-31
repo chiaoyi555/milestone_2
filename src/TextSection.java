@@ -17,6 +17,7 @@ public class TextSection {
 
     //The first instruction in the .text section should be at 0x00400000
     private static final int TEXT_START_ADDRESS = 0x00400000;
+    private static final int DATA_START_ADDRESS = 0x10010000;
     private static final int MAX_16BIT = 0xFFFF;
     private final List<String> labels = new ArrayList<>(); // store the label we declared
     private final List<Integer> addresses = new ArrayList<>();// store data's address
@@ -90,32 +91,36 @@ public class TextSection {
                         case "li":
                             int value = Integer.parseInt(regArray[1]);
                             if(value > MAX_16BIT){ // lui + ori
-                                machineCode.add("lilui "+regArray);
+                                machineCode.add("lilui "+regArray); // lui $at, label shift right 16
                                 labels.add("lilui "+regArray);
                                 addresses.add(currentAddress+=4);
-                                machineCode.add("liori "+regArray);
+                                machineCode.add("liori "+regArray); // ori $s0, $at, label shift left 16
                                 labels.add("liori "+regArray);
                                 addresses.add(currentAddress+=4);
                             }else {
-                                machineCode.add(Instructions.iFormatEncoding("ori", new String[]{regArray[0], "$zero", regArray[1]}));
-                                labels.add("ori"+ new String[]{regArray[0]+ "$zero"+ regArray[1]});
+                                // addiu $v0, $0, 4
+                                machineCode.add(Instructions.iFormatEncoding("addiu", new String[]{regArray[0], "$zero", regArray[1]}));
+                                labels.add("addiu"+ new String[]{regArray[0]+ "$zero"+ regArray[1]});
                                 addresses.add(currentAddress+=4);
                             }
                             break;
                         case "la":
-                            machineCode.add("lalui " + regArray[0] + "," + regArray[1]);
-                            labels.add("lalui " + regArray[0] + "," + regArray[1]);
+                            machineCode.add("lalui " + "$at" + "," + regArray[1]); //lui $at, upper 16
+                            labels.add("lalui " + "$at" + "," + regArray[1]);
                             addresses.add(currentAddress+=4);
-                            machineCode.add("laori " + regArray[0] + ",$at," + regArray[1]);
+                            machineCode.add("laori " + regArray[0] + ",$at," + regArray[1]); //ori $a0, $at, lower 16
                             labels.add("laori " + regArray[0] + ",$at," + regArray[1]);
                             addresses.add(currentAddress+=4);
                             //ori $a0, $at, label
                             // deal with this in TextSection
                             break;
                         case "blt": // slt $at, $rs, $rt + bne $at, $zero, label
-                            machineCode.add("slt "+regArray[0]+regArray[1]+"$at");
-                            machineCode.add("bne $at, $zero "+regArray[2]);
-                            currentAddress+=8;
+                            machineCode.add("slt "+"$at,"+regArray[0]+","+regArray[1]);
+                            labels.add("slt "+"$at,"+regArray[0]+","+regArray[1]); //slt rd, rs, rt
+                            addresses.add(currentAddress+=4);
+                            machineCode.add("bne $at, $zero, "+regArray[2]);
+                            labels.add("bne $at, $zero, "+regArray[2]);
+                            addresses.add(currentAddress+=4);
                             break;
                         case "move": // add $d, $s, $zero
                             machineCode.add(Instructions.rFormatEncoding("add", regArray[0], regArray[1], "$zero"));
@@ -148,7 +153,7 @@ public class TextSection {
                     String[] array = reg.split(",");
                     String label = array[2];
                     int labelAddress = this.getLabelAddress(label);
-                    int pcPlus4 = this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i))+1)); // gets the index of the instruction
+                    int pcPlus4 = this.getLabelAddress(labels.get(this.getInstructionIndex(machineCode.get(i)))); // gets the index of the instruction
                     int offset = labelAddress-pcPlus4;
                     array[2] = ""+offset;
                     for(int index=0; i<array.length; ++i){
@@ -182,6 +187,7 @@ public class TextSection {
                     j = "j " + offset;
                     machineCode.set(i, Instructions.jFormatEncoding(j));
                 } else if (machineCode.get(i).contains("lalui ")) {
+                    // lui
                     String lui = machineCode.get(i);
                     int splitAt = lui.indexOf(" ");
                     String instruction = "lui";
@@ -209,8 +215,48 @@ public class TextSection {
                     }
                     String label = array[2];
                     int offset = data.getLabelAddress(label);
-                    offset = offset << 16;
+                    array[2] = "" + offset;
+                    machineCode.set(i, Instructions.iFormatEncoding(instruction, array));
+                }
+                else if(machineCode.get(i).contains("slt ")){ //slt $at, $rs, $rt
+                    String slt = machineCode.get(i);
+                    int splitInstruction = slt.indexOf(" ");
+                    String instruction = "slt";
+                    String registers = slt.substring(splitInstruction);
+                    String[] array = registers.split(",");
+                    for(int index=0; index<array.length; ++index){
+                        array[index] = array[index].trim();
+                    }
+                    machineCode.set(i, Instructions.rFormatEncoding(instruction, array[0], array[1], array[2]));
+                }
+                else if(machineCode.get(i).contains("lilui ")){
+                    String lui = machineCode.get(i);
+                    int splitAt = lui.indexOf(" ");
+                    String instruction = "lui";
+                    String registers = lui.substring(splitAt).trim();
+                    // rt int
+                    String[] array = registers.split(",");
+                    for(int index=0; index<array.length; ++index){
+                        array[index] = array[index].trim();
+                    }
+                    String label = array[1];
+                    int offset = data.getLabelAddress(label);
                     offset = offset >> 16;
+                    array[1] = "" + offset;
+                    machineCode.set(i, Instructions.iFormatEncoding(instruction, array));
+                }
+                else if(machineCode.get(i).contains("liori ")){
+                    String ori = machineCode.get(i);
+                    int splitInstruction = ori.indexOf(" ");
+                    String instruction = "ori";
+                    String registers = ori.substring(splitInstruction);
+                    //rt rs int
+                    String[] array = registers.split(",");
+                    for(int index=0; index<array.length; ++index){
+                        array[index] = array[index].trim();
+                    }
+                    String label = array[2];
+                    int offset = data.getLabelAddress(label);
                     array[2] = "" + offset;
                     machineCode.set(i, Instructions.iFormatEncoding(instruction, array));
                 }

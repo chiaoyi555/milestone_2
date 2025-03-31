@@ -34,6 +34,8 @@ public class DataSection {
                 String content = data.substring(data.indexOf("\"")+1, data.lastIndexOf("\""));
                 content += "\0";
                 s+=content;
+                currentAddress+=s.length();
+                s = "";
             }
         }
         while(s.length()%4!=0){

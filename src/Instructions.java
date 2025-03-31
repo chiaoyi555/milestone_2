@@ -100,7 +100,7 @@ public class Instructions {
         int opcode = 0;
         switch(instruction){
             case "addiu": // addiu array: [rt], [rs], [int]
-                opcode = 0b001001;
+                opcode = 0b001001; //pass in as addiu $rt, rs, int
                 inst = RTRSIntermediate(opcode, regArray); // rt rs int method
                 break;
             case "andi": // andi array: [rt], [rs], [int]
@@ -204,12 +204,15 @@ public class Instructions {
         return twosComplement;
     }
     public static int trimIntermediate(int intermediate){
-        //int shift = (int)(Math.pow(2,16)-1);
-        //int trim = (intermediate & shift);
-        intermediate = intermediate << 16;
-        intermediate = intermediate >>> 16;
+
+            intermediate =  intermediate << 16;
+            intermediate =  intermediate >> 16;
+
         return intermediate;
     }
+    //pass in as addiu rt, rs, int op: 0b001001
+    //li $v0, 4 -> addiu, $v0, $zero, 4
+    //lui + ori
     public static int RTRSIntermediate(int opcode, String []regArray){
         int inst = 0;
         int intermediate = 0;
@@ -226,13 +229,12 @@ public class Instructions {
             intermediate = Integer.parseInt(regArray[2]); // parse string (int)
         }
 
-        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
         rs = Register.getRegisterNumber(regArray[1]); // rs register number
         rt = Register.getRegisterNumber(regArray[0]); // rt register number
         if (rs == null || rt == null) {
             throw new IllegalArgumentException("Invalid register name");
         }
-
+        intermediate = trimIntermediate(intermediate);
         Integer.toBinaryString(rs); // covert rs to number
         Integer.toBinaryString(rt); // covert rt to number
         inst |= (opcode << 26);
@@ -290,15 +292,13 @@ public class Instructions {
         else{
             intermediate = Integer.parseInt(regArray[1]); // parse string (int)
         }
-
-        intermediate = trimIntermediate(intermediate); // trim sign-bit to 16 bits
         rt = Register.getRegisterNumber(regArray[0]); // rt register number
         if (rt == null) {
             throw new IllegalArgumentException("Invalid register name");
         }
         Integer.toBinaryString(rt); // covert rt to number
         inst |= (opcode << 26);
-        inst |= (rt <<14);
+        inst |= (rt <<16);
         inst |= intermediate;
         return inst;
     }
