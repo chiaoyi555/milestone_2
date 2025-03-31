@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 public class DataSection {
     //use myData: .asciiz "Hello" as an example
@@ -27,7 +26,7 @@ public class DataSection {
             String data = line.substring(split+1).trim();
 
             labels.add(label);
-            addresses.add(currentAddress++);
+            addresses.add(currentAddress);
 
             if (data.startsWith(".asciiz")) {
                 // store the string between "" into content (Hello)
@@ -57,13 +56,8 @@ public class DataSection {
         String reverse = "";
         char ch;
         for (int i = 0; i < l.length(); i++) {
-
-            // extracts each character
-            ch = l.charAt(i);
-
-            // adds each character in
-            // front of the existing string
-            reverse = ch + reverse;
+            ch = l.charAt(i); //get char at i
+            reverse = ch + reverse; //add next char in front to reverse string
         }
         return reverse;
     }

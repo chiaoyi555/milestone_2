@@ -7,7 +7,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        String inputFile = args[0];
+        String inputFile = args[0];//"/Users/brucethao/Desktop/TestFileCreation/EvenOrOdd.asm";
         try {
             List<String> lines = new ArrayList<>(Files.readAllLines(Paths.get(inputFile))); //read the file
             List<String> dataSection = new ArrayList<>();

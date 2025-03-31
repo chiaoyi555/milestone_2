@@ -4,7 +4,6 @@ import java.util.List;
 public class Instructions {
 
     private static final int MAX_16BIT = 0xFFFF;
-    private static DataSection data;
     // method for determine whether it is r-format, i-format or j-format
     public static String determineInstructionType(String instruction) {
         String[] R_Format = { "add", "and", "or", "slt", "sub" };
@@ -136,18 +135,25 @@ public class Instructions {
         return String.format("%08x", inst); // return hexidecimal string of instruction;
     }
 
+
     // method for run J format encoding
     public static String jFormatEncoding(String instr_index) {
         String[] split = instr_index.split(" ");
         String label = split[1];
-        int target = Integer.parseInt(split[1], 16);
+        int target = Integer.parseInt(split[1]);
         int j = 0b000010;
-
+        //int offset = 0b00010000000000000001001100;
+        //offset = offset >> 2;
+        //0000 | 10 - 00 0100 0000 0000 0000 0100 1100
+        // shift right 2 0000 1000 0001 0000 0000 0000 0001 0011
+        // 08100013
+        // 0840004b
         int inst = 0;
-        inst = inst | (target << 2);
+        inst = inst | (target);
         inst = inst | (j << 26);
         // 0000 | 10
         // j = 0x0800000
+        // target =
         return String.format("%08x", inst);
     }
 
@@ -200,8 +206,8 @@ public class Instructions {
     public static int trimIntermediate(int intermediate){
         //int shift = (int)(Math.pow(2,16)-1);
         //int trim = (intermediate & shift);
-        intermediate = intermediate<<16; //simplifies trimming sign bit
-        intermediate = intermediate>>16;
+        intermediate = intermediate << 16;
+        intermediate = intermediate >>> 16;
         return intermediate;
     }
     public static int RTRSIntermediate(int opcode, String []regArray){
@@ -259,7 +265,7 @@ public class Instructions {
         if (rs == null || rt == null) {
             throw new IllegalArgumentException("Invalid register name");
         }
-
+        offset = trimIntermediate(offset);
         Integer.toBinaryString(rs); // covert rs to number
         Integer.toBinaryString(rt); // covert rt to number
         inst |= (opcode << 26);
