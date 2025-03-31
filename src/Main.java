@@ -6,7 +6,6 @@ import java.util.*;
 public class Main {
 
     public static void main(String[] args) {
-
         String inputFile = args[0];
         try {
             List<String> lines = new ArrayList<>(Files.readAllLines(Paths.get(inputFile))); //read the file
@@ -16,7 +15,6 @@ public class Main {
             boolean isText = false;
 
             for (String line : lines) { //separate the file into two parts(data and text)
-                line = line.trim();
                 if (line.startsWith(".data")) {
                     isData = true;
                     isText = false;
@@ -34,19 +32,56 @@ public class Main {
 
             // Process the .data section: parse data and generate encoded machine code
             DataSection data = new DataSection();
-            data.parseDataSection(new ArrayList<>(dataSection));
+            data.parseDataSection(dataSection);
             List<String> dataOutput = data.getEncodedData();
 
             // Process the .text section: parse instructions and generate machine code
             TextSection text = new TextSection();
-            text.parseTextSection(new ArrayList<>(textSection));
+            text.parseTextSection(textSection);
             text.resolveLabels(data); // Resolve labels for jump and branch instructions like j, beq, la, etc.
             List<String> textOutput = text.getMachineCode();
 
 
-        }catch(IOException e){
-            System.err.println(" Failed to read or write file: " + e.getMessage());
+            // TODO get directory of input file
+            // create a new files with filename.text and filename.data
+            // write to files using dataOutput & textOutput
+            int removePeriod = inputFile.lastIndexOf(".");
+            int removeDirectory = inputFile.lastIndexOf("/");
+            String fileName = inputFile.substring(removeDirectory+1, removePeriod);
+            String fileNameASM =inputFile.substring(removeDirectory);
+            String textFileName = fileName+".text";
+            String dataFileName = fileName+".data";
+            try{
+                File fileDirectory = new File(inputFile);
+                String parent = fileDirectory.getParent();
+
+
+                File dataFile = new File(parent, dataFileName);
+                dataFile.createNewFile();
+                BufferedWriter writeData = new BufferedWriter(new FileWriter(dataFile));
+                for(String l: dataOutput){
+                    writeData.write(l);
+                    writeData.newLine();
+                }
+                writeData.close();
+                File textFile = new File(parent, textFileName);
+                textFile.createNewFile();
+                BufferedWriter writeText = new BufferedWriter(new FileWriter(textFile));
+                for(String l: textOutput){
+                    writeText.write(l);
+                    writeText.newLine();
+                }
+                writeText.close();
+                System.out.println("Success!");
+            }
+            catch(IOException e){
+                System.out.println(" Failed to read or write file: "+e.getMessage());
+            }
+        }catch(Exception e){
+            System.err.println( e.getMessage());
         }
+
+
 
 
 //        String line = args[0];

@@ -9,30 +9,63 @@ public class DataSection {
 
     private final List<String> labels = new ArrayList<>(); // store the label we declared
     private final List<Integer> addresses = new ArrayList<>(); // store data's address
-    private final List<String> encodedData = new ArrayList<>();
+    private List<String> ascii = new ArrayList<>();
+    private List<String> encodeData = new ArrayList<>();
+
     private int currentAddress = DATA_START_ADDRESS;
 
 
-    public void parseDataSection(ArrayList<String> dataLines) {
+    public void parseDataSection(List<String> dataLines) {
+        List<String> temp = new ArrayList<>();
+        String s = "";
         for(String line: dataLines){
+
             if (line.isEmpty() || line.startsWith("#")) continue; // skip empty line or comment
-
-            String[] parts = line.split(":");
-
-            String label = parts[0].trim(); //myData
-            String data = parts[1].trim();  //.asciiz "Hello"
+            int split = line.indexOf(":");
+            String label = line.substring(0,split).trim();
+            String data = line.substring(split+1).trim();
 
             labels.add(label);
             addresses.add(currentAddress);
 
             if (data.startsWith(".asciiz")) {
                 // store the string between "" into content (Hello)
-                String content = data.substring(data.indexOf('"') + 1, data.lastIndexOf('"'));
-                encodeString(content);
+
+                String content = data.substring(data.indexOf("\"")+1, data.lastIndexOf("\""));
+                content += "\0";
+                s+=content;
+                currentAddress+=s.length();
+                s = "";
             }
         }
+        while(s.length()%4!=0){
+            s+= "\0";
+        }
+        int i = 0, j = 4;
+        while(j<=s.length()){
+            String sub = s.substring(i,j);
+            ascii.add(sub);
+            i = j;
+            j = i+4;
+        }
+        for(String l: ascii){
+            temp.add(reverse(l));
+        }
+        ascii = temp;
+        encodeString(ascii);
     }
-
+    private String reverse(String l){
+        String reverse = "";
+        char ch;
+        for (int i = 0; i < l.length(); i++) {
+            ch = l.charAt(i); //get char at i
+            reverse = ch + reverse; //add next char in front to reverse string
+        }
+        return reverse;
+    }
+    public List<String> getLabels(){
+        return labels;
+    }
     public int getLabelAddress(String label) {
         for (int i = 0; i < labels.size(); i++) {
             if (labels.get(i).equals(label)) {
@@ -42,16 +75,18 @@ public class DataSection {
         return -1; // there is no this label
     }
 
-    private void encodeString(String content) {
-        for (char c : content.toCharArray()) {
-            encodedData.add(String.format("%02x", (int) c)); //change the char into hex format (ASCII)
+    private void encodeString(List<String> ascii) {
+        for(int i = 0; i<ascii.size(); ++i){
+            String encode = "";
+            for(int j = 0; j<ascii.get(i).length(); j++){
+                encode += String.format("%02x", (int)ascii.get(i).charAt(j));
+            }
+            encodeData.add(encode);
         }
-        encodedData.add("00"); // add null in the end
-        currentAddress += content.length() + 1; // update address
     }
 
     public List<String> getEncodedData() {
-        return encodedData;
+        return encodeData;
     }
 
 }
